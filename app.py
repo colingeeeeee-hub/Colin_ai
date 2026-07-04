@@ -2,244 +2,129 @@ import streamlit as st
 from openai import OpenAI
 
 # ==============================================================================
-# 🎨 1. 极致护眼与温暖无障碍界面设计 (Custom CSS Injection)
+# 🎨 1. ChatGPT 扁平化风格界面重塑 (Modern UI Overhaul)
 # ==============================================================================
-# 这里我们注入了高颜值的自定义样式：
-# - 引入了 Noto Sans SC（思源黑体）确保中文字体浑厚饱满、字形端庄舒适
-# - 优化了整体页面的底色为防干眼症的温润纸张米浆色（#FDFBF7）
-# - 将输入框和对话框进行深度重绘，放大了文本，增加了温暖色带引导
-# - 移除了 Streamlit 各种官方自带的冗余标签和按钮，实现极致干净的极简风
+# 这里我们注入了极具辨识度的 ChatGPT 视觉语言：
+# - 引入了 'Inter' 字体，这是许多现代科技应用的首选，字形扁平清晰、易读性极高
+# - 整体采用 ChatGPT 的经典深色模式 (#343541)，而不是原本温馨的米浆色
+# - 移除了冷冰冰的主标题，改为极简的“Coling's Dad AI”居中文字，模拟官网顶部的极简导航栏
+# - 对话气泡完全重绘，采用扁平化设计，去掉了莫兰迪指示条和微光投影
 # ==============================================================================
 
-CUSTOM_CSS = """
+MODERN_CHATGPT_CSS = """
 <style>
-/* 导入中文字体 */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+/* 导入现代极简字体 Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* 重构整体背景与基础字体 */
 html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
-    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    background-color: #FDFBF7 !important; /* 护眼温润米白 */
-    color: #2D3142 !important; /* 深炭色，比纯黑更柔和 */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    background-color: #343541 !important; /* ChatGPT 经典深灰背景 */
+    color: #ECECF1 !important; /* 浅灰文字，高对比度 */
 }
 
-/* 隐藏 Streamlit 官方杂乱遮挡（菜单、页脚、顶部红线等） */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-[data-testid="stHeader"] {background: transparent !important;}
+/* 隐藏 Streamlit 官方冗余元素 */
+#MainMenu, footer, header, [data-testid="stHeader"] {visibility: hidden;}
 
-/* 修改大标题和提示信息样式 */
-h1 {
-    font-family: 'Noto Sans SC', sans-serif !important;
-    font-weight: 700 !important;
-    color: #2D3142 !important;
+/* 重塑标题栏：移除大 H1，改为极简导航栏风格 */
+.stMarkdown h3#coling-s-dad-ai {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+    color: #ECECF1 !important;
     text-align: center;
-    padding-bottom: 10px;
-    border-bottom: 2px dashed #E2DCD5;
-    margin-bottom: 25px !important;
+    padding: 10px 0;
+    margin: 0 !important;
+    letter-spacing: -0.5px;
 }
 
-/* 侧边栏密码区的美化 */
+/* 侧边栏暗号区的扁平化美化 */
 [data-testid="stSidebar"] {
-    background-color: #F4EBE1 !important; /* 侧边栏暖色沙滩金 */
-    border-right: 1px solid #E2DCD5 !important;
+    background-color: #202123 !important; /* 更深的侧边栏背景 */
+    border-right: 1px solid #4D4D4F !important;
 }
 
-/* 输入框大字号及微光投影 */
+/* 扁平化输入框（ChatGPT 风格） */
 div[data-testid="stChatInput"] {
-    border-radius: 24px !important;
-    border: 2px solid #E2DCD5 !important;
-    background-color: #FFFFFF !important;
-    box-shadow: 0 6px 20px rgba(189, 178, 168, 0.15) !important;
-    padding: 3px !important;
-    transition: all 0.3s ease;
+    border-radius: 20px !important;
+    border: 1px solid #565869 !important;
+    background-color: #40414F !important;
+    box-shadow: none !important; /* 移除了投影 */
+    transition: all 0.2s ease;
 }
 
 div[data-testid="stChatInput"]:focus-within {
-    border-color: #E07A5F !important; /* 激活时呈暖橙色 */
-    box-shadow: 0 6px 20px rgba(224, 122, 95, 0.25) !important;
+    border-color: #10A37F !important; /* 激活时呈 ChatGPT 的经典绿色 */
 }
 
 /* 聊天对话框容器 */
 [data-testid="stChatMessage"] {
-    padding: 18px 24px !important;
-    margin-bottom: 15px !important;
-    border-radius: 16px !important;
-    box-shadow: 0 4px 12px rgba(141, 127, 114, 0.05) !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    border-radius: 12px !important;
+    background-color: transparent !important; /* 背景透明 */
+    box-shadow: none !important; /* 移除了投影 */
 }
 
-/* 👨 老爸的气泡 (User) - 温和淡茶绿 */
+/* 👩 老爸的头像和气泡样式 (User) */
 [data-testid="stChatMessage"][aria-label="user"] {
-    background-color: #E6EFE9 !important;
-    border-left: 6px solid #81B29A !important; /* 莫兰迪绿指示条 */
+    border: none !important;
 }
 
-/* 🤖 AI 的气泡 (Assistant) - 温暖杏子橙 */
+/* 🤖 AI 的头像和气泡样式 (Assistant) */
 [data-testid="stChatMessage"][aria-label="assistant"] {
-    background-color: #F7EFE5 !important;
-    border-left: 6px solid #E07A5F !important; /* 暖阳橙指示条 */
+    border: none !important;
 }
 
-/* 强制放大正文字体，保证无障碍阅读 */
-[data-testid="stChatMessage"] p, .stAlert p, div[data-testid="stMarkdownContainer"] p {
-    font-size: 19px !important; /* 字号放大到19px，极其容易看清 */
-    line-height: 1.65 !important;
-    color: #2D3142 !important;
+/* 模拟 ChatGPT 头像：使用 FontAwesome 图标，并通过伪元素注入样式 */
+div[data-testid="stChatMessageAvatar"] {
+    border-radius: 6px !important;
+    background-color: transparent !important;
 }
 
-/* 美化输入框里的占位提示文字 */
-input::placeholder {
-    color: #A0968C !important;
+/* 注入 ChatGPT 的绿色图标 (助理头像) */
+[data-testid="stChatMessage"][aria-label="assistant"] [data-testid="stChatMessageAvatar"]::after {
+    content: '\\f10c'; /* FontAwesome circle-o */
+    font-family: FontAwesome;
+    font-size: 24px;
+    color: #10A37F;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 正文字体：使用 Inter，字号调整为 16px */
+[data-testid="stChatMessage"] p, div[data-testid="stMarkdownContainer"] p {
     font-size: 16px !important;
+    line-height: 1.6 !important;
+    color: #ECECF1 !important;
 }
 
-/* 提示卡片美化 */
+/* 暗号提示卡片美化 */
 .stAlert {
-    border-radius: 16px !important;
-    background-color: #F4EBE1 !important;
-    border: 1px dashed #E07A5F !important;
+    border-radius: 12px !important;
+    background-color: #202123 !important;
+    border: 1px solid #E07A5F !important;
 }
 </style>
 """
 
 # ==============================================================================
-# 🚀 2. 核心逻辑控制
+# 🚀 2. 核心逻辑控制 (Core Logic)
 # ==============================================================================
 
-# 设置页面配置，让标签页和图标变好看
+# 设置页面配置
 st.set_page_config(
-    page_title="老爸的专属 AI 空间", 
-    page_icon="👨‍👦", 
+    page_title="Coling's Dad AI", 
+    page_icon="🤖", 
     layout="centered"
 )
 
-# 注入我们的高颜值护眼 CSS 样式
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+# 注入现代扁平化 CSS 样式
+st.markdown(MODERN_CHATGPT_CSS, unsafe_allow_html=True)
 
-# 初始化 API Key (这里配置成你申请的免费额度硅基流动的 key)
-# *安全起见：你也可以在这里直接用 st.secrets 或是直接填入 Key*
-SILICONFLOW_API_KEY = "sk-cubkmoblzsywgnblrjiluspbcoedqxhqdxurdiqfimoblifh"
-from openai import OpenAI
-
-# ==============================================================================
-# 🎨 1. 极致护眼与温暖无障碍界面设计 (Custom CSS Injection)
-# ==============================================================================
-# 这里我们注入了高颜值的自定义样式：
-# - 引入了 Noto Sans SC（思源黑体）确保中文字体浑厚饱满、字形端庄舒适
-# - 优化了整体页面的底色为防干眼症的温润纸张米浆色（#FDFBF7）
-# - 将输入框和对话框进行深度重绘，放大了文本，增加了温暖色带引导
-# - 移除了 Streamlit 各种官方自带的冗余标签和按钮，实现极致干净的极简风
-# ==============================================================================
-
-CUSTOM_CSS = """
-<style>
-/* 导入中文字体 */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
-
-/* 重构整体背景与基础字体 */
-html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
-    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    background-color: #FDFBF7 !important; /* 护眼温润米白 */
-    color: #2D3142 !important; /* 深炭色，比纯黑更柔和 */
-}
-
-/* 隐藏 Streamlit 官方杂乱遮挡（菜单、页脚、顶部红线等） */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-[data-testid="stHeader"] {background: transparent !important;}
-
-/* 修改大标题和提示信息样式 */
-h1 {
-    font-family: 'Noto Sans SC', sans-serif !important;
-    font-weight: 700 !important;
-    color: #2D3142 !important;
-    text-align: center;
-    padding-bottom: 10px;
-    border-bottom: 2px dashed #E2DCD5;
-    margin-bottom: 25px !important;
-}
-
-/* 侧边栏密码区的美化 */
-[data-testid="stSidebar"] {
-    background-color: #F4EBE1 !important; /* 侧边栏暖色沙滩金 */
-    border-right: 1px solid #E2DCD5 !important;
-}
-
-/* 输入框大字号及微光投影 */
-div[data-testid="stChatInput"] {
-    border-radius: 24px !important;
-    border: 2px solid #E2DCD5 !important;
-    background-color: #FFFFFF !important;
-    box-shadow: 0 6px 20px rgba(189, 178, 168, 0.15) !important;
-    padding: 3px !important;
-    transition: all 0.3s ease;
-}
-
-div[data-testid="stChatInput"]:focus-within {
-    border-color: #E07A5F !important; /* 激活时呈暖橙色 */
-    box-shadow: 0 6px 20px rgba(224, 122, 95, 0.25) !important;
-}
-
-/* 聊天对话框容器 */
-[data-testid="stChatMessage"] {
-    padding: 18px 24px !important;
-    margin-bottom: 15px !important;
-    border-radius: 16px !important;
-    box-shadow: 0 4px 12px rgba(141, 127, 114, 0.05) !important;
-}
-
-/* 👨 老爸的气泡 (User) - 温和淡茶绿 */
-[data-testid="stChatMessage"][aria-label="user"] {
-    background-color: #E6EFE9 !important;
-    border-left: 6px solid #81B29A !important; /* 莫兰迪绿指示条 */
-}
-
-/* 🤖 AI 的气泡 (Assistant) - 温暖杏子橙 */
-[data-testid="stChatMessage"][aria-label="assistant"] {
-    background-color: #F7EFE5 !important;
-    border-left: 6px solid #E07A5F !important; /* 暖阳橙指示条 */
-}
-
-/* 强制放大正文字体，保证无障碍阅读 */
-[data-testid="stChatMessage"] p, .stAlert p, div[data-testid="stMarkdownContainer"] p {
-    font-size: 19px !important; /* 字号放大到19px，极其容易看清 */
-    line-height: 1.65 !important;
-    color: #2D3142 !important;
-}
-
-/* 美化输入框里的占位提示文字 */
-input::placeholder {
-    color: #A0968C !important;
-    font-size: 16px !important;
-}
-
-/* 提示卡片美化 */
-.stAlert {
-    border-radius: 16px !important;
-    background-color: #F4EBE1 !important;
-    border: 1px dashed #E07A5F !important;
-}
-</style>
-"""
-
-# ==============================================================================
-# 🚀 2. 核心逻辑控制
-# ==============================================================================
-
-# 设置页面配置，让标签页和图标变好看
-st.set_page_config(
-    page_title="老爸的专属 AI 空间", 
-    page_icon="👨‍👦", 
-    layout="centered"
-)
-
-# 注入我们的高颜值护眼 CSS 样式
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-
-# 初始化 API Key (这里配置成你申请的免费额度硅基流动的 key)
-# *安全起见：你也可以在这里直接用 st.secrets 或是直接填入 Key*
+# 初始化 API Key (请确保使用您自己的免费密钥)
 SILICONFLOW_API_KEY = "sk-xxxxxxxx" # 请替换为您自己的 SiliconFlow Key
 
 # 初始化聊天历史
@@ -247,61 +132,64 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # ==============================================================================
-# 🔒 3. 暗号锁防线（侧边栏极简呈现）
+# 🔒 3. 暗号锁防线 (Authorization Sidebar)
 # ==============================================================================
 with st.sidebar:
-    st.markdown("<h3 style='text-align: center; color: #E07A5F;'>🔐 专属安全验证</h3>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; color: #10A37F; padding: 10px 0;'>专属安全验证</h4>", unsafe_allow_html=True)
     password = st.text_input(
-        "请输入咱们的专属暗号解锁空间：", 
+        "请输入您的专属暗号：", 
         type="password", 
         placeholder="在这里输入暗号..."
     )
     st.markdown("---")
-    st.markdown("<p style='font-size: 14px; color: #7A6F62; text-align: center;'>Coling 亲手设计部署<br>© 2026 温暖相伴</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 12px; color: #9A9A9A; text-align: center;'>Coling's Dad AI<br>© 2026</p>", unsafe_allow_html=True)
 
-# 定义你们父子间的专属小秘密暗号，比如 "老爸第一" 或者 "0808"
+# 专属小秘密暗号
 CORRECT_PASSWORD = "岭南居士" # 替换成您的专属暗号
 
 if password != CORRECT_PASSWORD:
-    # 密码未通过时，展示极简的温暖引导卡片
-    st.markdown("<h1 style='text-align: center;'>👨‍👦 老爸的专属 AI 空间</h1>", unsafe_allow_html=True)
-    st.info("💡 爸，请在左侧边栏输入我告诉你的【专属暗号】，就可以立即解锁 AI 助手和我开始聊天啦！")
-    st.image("https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1000&auto=format&fit=crop", use_container_width=True)
+    # 密码未通过时，展示极简的引导卡片
+    st.markdown("### Coling's Dad AI", unsafe_allow_html=True)
+    st.info("💡 请在左侧侧边栏输入您的【专属暗号】解锁空间。")
+    # 替换为一个更扁平、现代的引导图片
+    st.image("https://raw.githubusercontent.com/colingeeeeee-hub/dad_ai/main/assets/setup_dark.svg", use_container_width=True)
 else:
     # 密码验证通过，解锁主界面
-    st.markdown("<h1>👨‍👦 老爸的专属 AI 空间</h1>", unsafe_allow_html=True)
+    st.markdown("### Coling's Dad AI", unsafe_allow_html=True)
 
     # 渲染历史对话记录
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
+        # 为用户和助理设置不同的头像图标（FontAwesome 图标）
+        avatar_icon = "user" if message["role"] == "user" else "🤖"
+        with st.chat_message(message["role"], avatar=avatar_icon):
             st.markdown(message["content"])
 
     # 捕获用户新输入
-    if prompt := st.chat_input("爸，今天有什么想聊的？随时跟我说..."):
-        # 在界面渲染老爸说的话
-        with st.chat_message("user"):
+    if prompt := st.chat_input("您好！有什么我可以帮您的吗？..."):
+        # 在界面渲染用户说的话，使用 FontAwesome 人类头像
+        with st.chat_message("user", avatar="user"):
             st.markdown(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         # 准备向大模型请求数据
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="🤖"):
             # 建立进度条占位区
             message_placeholder = st.empty()
             full_response = ""
             
             try:
-                # 初始化客户端，指向 SiliconFlow 接口
+                # 初始化客户端
                 client = OpenAI(
-                    api_key=SILICONFLOW_API_KEY,
+                    api_key="sk-cubkmoblzsywgnblrjiluspbcoedqxhqdxurdiqfimoblifh",
                     base_url="https://api.siliconflow.cn/v1"
                 )
                 
-                # 创建流式响应（Stream），可以打字机一样一个字一个字蹦出来，给老爸最好的沉浸感
+                # 创建流式响应（Stream）
                 response_stream = client.chat.completions.create(
-                    model="deepseek-ai/DeepSeek-V3", # 采用最新强大的 DeepSeek 模型
+                    model="deepseek-ai/DeepSeek-V3", # 确保使用您想用的模型
                     messages=[
-                        # 系统设定：让 AI 角色变成一个温和、体贴、有耐心、懂中国传统家庭文化、乐于帮助老人的倾听者
-                        {"role": "system", "content": "你是由大孝子Coling专门为他父亲定制开发的专属AI助手。在对话中，你的语气要格外温柔、沉稳、极具耐心、关怀备至。用词要简练接地气，多用暖心的话，绝不能有机器人的冰冷感。像老朋友一样陪这位父亲聊天、解答各种生活小常识、天气、养生、新闻或者讲温暖的故事，让他感受到陪伴和快乐。"},
+                        # 系统设定：保留体贴、有耐心的角色设定
+                        {"role": "system", "content": "你是由Coling专门为他父亲定制开发的专属AI助手。在对话中，你的语气要格外温柔、沉稳、极具耐心、关怀备至。用词要简练接地气，多用暖心的话，绝不能有机器人的冰冷感。像老朋友一样陪这位父亲聊天、解答各种生活小常识、天气、养生、新闻或者讲温暖的故事，让他感受到陪伴和快乐。"},
                         *st.session_state.messages
                     ],
                     stream=True
@@ -311,16 +199,16 @@ else:
                 for chunk in response_stream:
                     if chunk.choices[0].delta.content is not None:
                         full_response += chunk.choices[0].delta.content
-                        # 实时更新气泡里的字
-                        message_placeholder.markdown(full_response + " ▌")
+                        # 实时更新气泡里的字，加上 ChatGPT 的扁平化打字光标
+                        message_placeholder.markdown(full_response + " █")
                 
                 # 去除末尾打字光标
                 message_placeholder.markdown(full_response)
                 
             except Exception as e:
                 # 友好的异常处理
-                st.error("⚠️ 哎呀，网络开小差了，爸您稍等一下再问我。")
-                full_response = "对不起啊爸，服务器刚才开了一下小差。您能把刚才的话再对我说一遍吗？"
+                st.error("⚠️ 网络中断。请您尝试再次向我提问。")
+                full_response = "网络遇到一点故障，老爸。请把您刚才的话再说一遍好吗？"
                 message_placeholder.markdown(full_response)
                 
         # 存入对话历史
