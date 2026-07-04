@@ -96,7 +96,7 @@ textarea {
 # ==============================================================================
 st.set_page_config(
     page_title="DeepSeek", 
-    page_icon="🐋", /* 换成代表 DeepSeek 的蓝色鲸鱼/机器人图标 */
+    page_icon="🐋",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
